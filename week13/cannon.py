@@ -34,9 +34,10 @@ class Shell(GameObject):
         '''
         self.coord = coord
         self.vel = vel
-        if color == None:
-            color = rand_color()
         self.color = color
+        if color == None:
+            self.color = rand_color()
+        
         self.rad = rad
         self.is_alive = True
 
