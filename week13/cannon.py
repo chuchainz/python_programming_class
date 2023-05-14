@@ -210,7 +210,7 @@ class BigTarget(Target):
         super().__init__(coord, color, rad)
 
 class CircularMovingTarget(Target):
-    def __init__(self, coord=None, color=None, rad=30):
+    def __init__(self, coord=None, color=None, rad=15):
         super().__init__(coord, color, rad)
         self.angle = randint(0, 360)
 
@@ -281,8 +281,8 @@ class Manager:
         
         for i in range(self.n_targets):
             self.targets.append(CircularMovingTarget(coord=[randint(50, self.width-50), randint(50, self.height-50)],
-                rad=randint(max(1, 30 - 2*max(0, self.score_t.score())),
-                30 - max(0, self.score_t.score()))))
+                rad=randint(max(1, 20 - 2*max(0, self.score_t.score())),
+                20 - max(0, self.score_t.score()))))
 
     def process(self, events, screen):
         '''
