@@ -1,6 +1,7 @@
 import numpy as np
 import pygame as pg
 from random import randint, gauss
+from math import radians, sin, cos
 
 pg.init()
 pg.font.init()
@@ -208,6 +209,18 @@ class BigTarget(Target):
     def __init__(self, coord=None, color=None, rad=50):
         super().__init__(coord, color, rad)
 
+class CircularMovingTarget(Target):
+    def __init__(self, coord=None, color=None, rad=30):
+        super().__init__(coord, color, rad)
+        self.angle = randint(0, 360)
+
+    def move(self):
+        self.angle += 5
+        angle_rad = radians(self.angle)
+        x = self.coord[0] + self.rad * cos(angle_rad)
+        y = self.coord[1] + self.rad * sin(angle_rad)
+        self.coord = [x, y]
+
 class ScoreTable:
     '''
     Score table class.
@@ -236,12 +249,14 @@ class Manager:
     '''
     Class that manages events' handling, ball's motion and collision, target creation, etc.
     '''
-    def __init__(self, n_targets=1):
+    def __init__(self, width=800, height=600, n_targets=1):
         self.balls = []
         self.gun = Cannon()
         self.targets = []
         self.score_t = ScoreTable()
         self.n_targets = n_targets
+        self.width = width
+        self.height = height
         self.new_mission()
 
     def new_mission(self):
@@ -263,6 +278,11 @@ class Manager:
         for i in range(self.n_targets):
             self.targets.append(BigTarget(rad=randint(max(1, 100 - 2*max(0, self.score_t.score())),
                 100 - max(0, self.score_t.score()))))
+        
+        for i in range(self.n_targets):
+            self.targets.append(CircularMovingTarget(coord=[randint(50, self.width-50), randint(50, self.height-50)],
+                rad=randint(max(1, 30 - 2*max(0, self.score_t.score())),
+                30 - max(0, self.score_t.score()))))
 
     def process(self, events, screen):
         '''
