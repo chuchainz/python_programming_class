@@ -204,7 +204,9 @@ class FastMovingTargets(Target):
         self.coord[0] += self.vx
         self.coord[1] += self.vy
 
-
+class BigTarget(Target):
+    def __init__(self, coord=None, color=None, rad=50):
+        super().__init__(coord, color, rad)
 
 class ScoreTable:
     '''
@@ -258,6 +260,9 @@ class Manager:
             self.targets.append(Target(rad=randint(max(1, 30 - 2*max(0, self.score_t.score())),
                 30 - max(0, self.score_t.score()))))
 
+        for i in range(self.n_targets):
+            self.targets.append(BigTarget(rad=randint(max(1, 100 - 2*max(0, self.score_t.score())),
+                100 - max(0, self.score_t.score()))))
 
     def process(self, events, screen):
         '''
