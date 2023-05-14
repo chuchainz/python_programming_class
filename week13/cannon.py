@@ -9,6 +9,9 @@ pg.font.init()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
+GRAY = (220,220,220)
+PINK = (220,0,0)
+TEAL= (0,255,255)
 
 SCREEN_SIZE = (800, 600)
 
@@ -75,11 +78,11 @@ class Shell(GameObject):
         pg.draw.circle(screen, self.color, self.coord, self.rad)
 
 
-class Cannon(GameObject):
+class Tank(GameObject):
     '''
-    Cannon class. Manages it's renderring, movement and striking.
+    Tank class. Manages it's renderring, movement and striking.
     '''
-    def __init__(self, coord=[30, SCREEN_SIZE[1]//2], angle=0, max_pow=50, min_pow=10, color=RED):
+    def __init__(self, coord=[30, SCREEN_SIZE[1]//2], angle=0, max_pow=50, min_pow=10, color=RED,body_color=GRAY, gun_color=TEAL):
         '''
         Constructor method. Sets coordinate, direction, minimum and maximum power and color of the gun.
         '''
@@ -87,6 +90,8 @@ class Cannon(GameObject):
         self.angle = angle
         self.max_pow = max_pow
         self.min_pow = min_pow
+        self.body_color = body_color
+        self.gun_color = gun_color
         self.color = color
         self.active = False
         self.pow = min_pow
@@ -133,18 +138,32 @@ class Cannon(GameObject):
 
     def draw(self, screen):
         '''
-        Draws the gun on the screen.
+        Draws the tank on the screen.
         '''
-        gun_shape = []
-        vec_1 = np.array([int(5*np.cos(self.angle - np.pi/2)), int(5*np.sin(self.angle - np.pi/2))])
-        vec_2 = np.array([int(self.pow*np.cos(self.angle)), int(self.pow*np.sin(self.angle))])
-        gun_pos = np.array(self.coord)
-        gun_shape.append((gun_pos + vec_1).tolist())
-        gun_shape.append((gun_pos + vec_1 + vec_2).tolist())
-        gun_shape.append((gun_pos + vec_2 - vec_1).tolist())
-        gun_shape.append((gun_pos - vec_1).tolist())
-        pg.draw.polygon(screen, self.color, gun_shape)
+        width = 8
+        height = 6
+        tank_rect = pg.Rect(self.coord[0]-width/2, self.coord[1]-height/2, width, height)
+        pg.draw.rect(screen, self.body_color, tank_rect)
 
+        other_length = 30
+        other_width = 6
+
+        for i in range(3):
+            wheel_pos = (self.coord[0] + (i-1)*other_length/2, self.coord[1] + 10)
+            pg.draw.rect(screen, self.body_color, (wheel_pos[0] - other_length/2, wheel_pos[1] - other_width/2, other_length, other_width))
+
+        wheel_radius = 8
+        pg.draw.circle(screen, self.body_color, (self.coord[0] - 15, self.coord[1] + 10), wheel_radius)
+        pg.draw.circle(screen, self.body_color, (self.coord[0], self.coord[1] + 10), wheel_radius)
+        pg.draw.circle(screen, self.body_color, (self.coord[0] + 15, self.coord[1] + 10), wheel_radius)
+
+         # Draw the turret
+        turret_width = 10
+        turret_height = 12
+        turret_center = (self.coord[0], self.coord[1] - height / 2 - turret_height / 2)
+        rotated_turret = pg.transform.rotate(pg.Surface((turret_width, turret_height)), -np.degrees(self.angle))
+        turret_rect = rotated_turret.get_rect(center=turret_center)
+        screen.blit(rotated_turret, turret_rect)
 
 
 class Target(GameObject):
@@ -210,7 +229,7 @@ class BigTarget(Target):
         super().__init__(coord, color, rad)
 
 class CircularMovingTarget(Target):
-    def __init__(self, coord=None, color=None, rad=15):
+    def __init__(self, coord=None, color=None, rad=30):
         super().__init__(coord, color, rad)
         self.angle = randint(0, 360)
 
@@ -251,7 +270,7 @@ class Manager:
     '''
     def __init__(self, width=800, height=600, n_targets=1):
         self.balls = []
-        self.gun = Cannon()
+        self.gun = Tank()
         self.targets = []
         self.score_t = ScoreTable()
         self.n_targets = n_targets
@@ -281,8 +300,8 @@ class Manager:
         
         for i in range(self.n_targets):
             self.targets.append(CircularMovingTarget(coord=[randint(50, self.width-50), randint(50, self.height-50)],
-                rad=randint(max(1, 20 - 2*max(0, self.score_t.score())),
-                20 - max(0, self.score_t.score()))))
+                rad=randint(max(1, 30 - 2*max(0, self.score_t.score())),
+                30 - max(0, self.score_t.score()))))
 
     def process(self, events, screen):
         '''
