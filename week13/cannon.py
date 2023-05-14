@@ -127,6 +127,9 @@ class Cannon(GameObject):
         if (self.coord[1] > 30 or inc > 0) and (self.coord[1] < SCREEN_SIZE[1] - 30 or inc < 0):
             self.coord[1] += inc
 
+        if (self.coord[0] > 30 or inc > 0) and (self.coord[0] < SCREEN_SIZE[0] - 30 or inc < 0):
+            self.coord[0] += inc
+
     def draw(self, screen):
         '''
         Draws the gun on the screen.
@@ -140,6 +143,7 @@ class Cannon(GameObject):
         gun_shape.append((gun_pos + vec_2 - vec_1).tolist())
         gun_shape.append((gun_pos - vec_1).tolist())
         pg.draw.polygon(screen, self.color, gun_shape)
+
 
 
 class Target(GameObject):
