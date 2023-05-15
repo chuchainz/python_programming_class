@@ -321,6 +321,7 @@ class BombTargets(Target):
         super().__init__(coord, color, rad)
         self.vx = randint(-2, +2)
         self.vy = randint(-2, +2)
+        #self.vel = vel
         self.bombs = [] 
         self.dropsBombs = True
 
@@ -340,27 +341,24 @@ class BombTargets(Target):
         for i in range(2):
             if self.coord[i] < self.rad:
                 self.coord[i] = self.rad
-                if i == 0:
-                    self.vx = -int(self.vx)
-                else:
-                    self.vy = -int(self.vy)
+                if i == 0: self.vx = -int(self.vx)
+                else: self.vy = -int(self.vy)
             elif self.coord[i] > SCREEN_SIZE[i] - self.rad:
                 self.coord[i] = SCREEN_SIZE[i] - self.rad
-                if i == 0:
-                    self.vx = -int(self.vx)
-                else:
-                    self.vy = -int(self.vy)
+                if i == 0: self.vx = -int(self.vx)
+                else: self.vy = -int(self.vy)
     
     def dropbomb(self):
-        # Create a new bomb object at the current position of the target
-        bomb = Shell(list(self.coord), [0, 5], rad=10, color=RED)  # Customize the bomb properties as needed
-        self.bombs.append(bomb)  # Add the bomb to the bombs list
+        '''
+        create new bomb
+        '''
+        bomb = Shell(list(self.coord), [0, 5], rad=10, color=RED) #bomb properties
+        self.bombs.append(bomb)
 
     def draw(self, screen):
-        super().draw(screen)  # Call the draw method of the parent class
+        super().draw(screen)
         
-        # Draw the bombs on the screen
-        for bomb in self.bombs:
+        for bomb in self.bombs: #draw bombs
             bomb.draw(screen)
 
 class Tank(GameObject):
@@ -455,38 +453,6 @@ class Tank(GameObject):
         gun_shape.append((gun_pos + vec_2 - vec_1).tolist())
         gun_shape.append((gun_pos - vec_1).tolist())
         pg.draw.polygon(screen, self.color, gun_shape)
-
-# class EnemyTank(Tank):
-#     def __init__(self, coord=[400, SCREEN_SIZE[1] - 25], angle=0, max_pow=80, min_pow=10, color=RED):
-#         super().__init__(coord, angle, max_pow, min_pow, color=color)
-#         self.direction = 1
-#         self.move_counter = 0
-#         self.move_threshold = 50
-#         self.target = None
-
-#     def move_left(self):
-#         self.move(-40)
-
-#     def move_right(self):
-#         self.move(40)
-
-#     def update(self):
-#         self.move_counter += 1
-#         if self.move_counter >= self.move_threshold:
-#             self.move_counter = 0
-#             self.direction *= -1
-#             if self.direction == -1:
-#                 self.move_left()
-#             else:
-#                 self.move_right()
-#         if self.target is not None:
-#             target_pos = self.target.get_position()
-#             self.set_angle(target_pos)
-#             self.activate()
-#             return self.strike()
-
-#     def set_target(self, target):
-#         self.target = target
 
 screen = pg.display.set_mode(SCREEN_SIZE)
 pg.display.set_caption("The gun of Khiryanov")
