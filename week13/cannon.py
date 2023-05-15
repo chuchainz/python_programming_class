@@ -2,6 +2,7 @@ import numpy as np
 import pygame as pg
 from random import randint, gauss
 from math import radians, sin, cos
+import random
 
 pg.init()
 pg.font.init()
@@ -9,9 +10,11 @@ pg.font.init()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
-GRAY = (220,220,220)
-PINK = (220,0,0)
-TEAL= (0,255,255)
+NAVYBLUE = (0, 0, 128)
+BLUEVIOLET = (138, 43, 226)
+YELLOW = (255,255,0)
+GREEN = (0,255,0)
+COLORIO = (100,100,100)
 
 SCREEN_SIZE = (800, 600)
 
@@ -32,16 +35,26 @@ class Shell(GameObject):
     '''
     The ball class. Creates a ball, controls it's movement and implement it's rendering.
     '''
-    def __init__(self, coord, vel, rad=20, color=None):
+    def __init__(self, coord, vel, rad=20, color=None, p_type=0):
         '''
         Constructor method. Initializes ball's parameters and initial values.
         '''
         self.coord = coord
+        self.p_type = p_type
         self.vel = vel
-        self.color = color
+        if self.p_type == 0:
+            self.rad = rad
+        elif self.p_type == 1:
+            self.vel[0] *= 1.5
+            self.vel[1] *= 1.5
+            self.rad = 10
+        else:
+            self.vel[0] *= 0.75
+            self.vel[1] *= 0.75
+            self.rad = 30
         if color == None:
-            self.color = rand_color()
-        
+            color = rand_color()
+        self.color = color
         self.rad = rad
         self.is_alive = True
 
@@ -76,95 +89,6 @@ class Shell(GameObject):
         Draws the ball on appropriate surface.
         '''
         pg.draw.circle(screen, self.color, self.coord, self.rad)
-
-
-class Tank(GameObject):
-    '''
-    Tank class. Manages it's renderring, movement and striking.
-    '''
-    def __init__(self, coord=[30, SCREEN_SIZE[1]//2], angle=0, max_pow=50, min_pow=10, color=RED,body_color=GRAY, gun_color=TEAL):
-        '''
-        Constructor method. Sets coordinate, direction, minimum and maximum power and color of the gun.
-        '''
-        self.coord = coord
-        self.angle = angle
-        self.max_pow = max_pow
-        self.min_pow = min_pow
-        self.body_color = body_color
-        self.gun_color = gun_color
-        self.color = color
-        self.active = False
-        self.pow = min_pow
-    
-    def activate(self):
-        '''
-        Activates gun's charge.
-        '''
-        self.active = True
-
-    def gain(self, inc=2):
-        '''
-        Increases current gun charge power.
-        '''
-        if self.active and self.pow < self.max_pow:
-            self.pow += inc
-
-    def strike(self):
-        '''
-        Creates ball, according to gun's direction and current charge power.
-        '''
-        vel = self.pow
-        angle = self.angle
-        ball = Shell(list(self.coord), [int(vel * np.cos(angle)), int(vel * np.sin(angle))])
-        self.pow = self.min_pow
-        self.active = False
-        return ball
-        
-    def set_angle(self, target_pos):
-        '''
-        Sets gun's direction to target position.
-        '''
-        self.angle = np.arctan2(target_pos[1] - self.coord[1], target_pos[0] - self.coord[0])
-
-    def move(self, inc):
-        '''
-        Changes vertical position of the gun.
-        '''
-        if (self.coord[1] > 30 or inc > 0) and (self.coord[1] < SCREEN_SIZE[1] - 30 or inc < 0):
-            self.coord[1] += inc
-
-        if (self.coord[0] > 30 or inc > 0) and (self.coord[0] < SCREEN_SIZE[0] - 30 or inc < 0):
-            self.coord[0] += inc
-
-    def draw(self, screen):
-        '''
-        Draws the tank on the screen.
-        '''
-        width = 8
-        height = 6
-        tank_rect = pg.Rect(self.coord[0]-width/2, self.coord[1]-height/2, width, height)
-        pg.draw.rect(screen, self.body_color, tank_rect)
-
-        other_length = 30
-        other_width = 6
-
-        for i in range(3):
-            wheel_pos = (self.coord[0] + (i-1)*other_length/2, self.coord[1] + 10)
-            pg.draw.rect(screen, self.body_color, (wheel_pos[0] - other_length/2, wheel_pos[1] - other_width/2, other_length, other_width))
-
-        wheel_radius = 8
-        pg.draw.circle(screen, self.body_color, (self.coord[0] - 15, self.coord[1] + 10), wheel_radius)
-        pg.draw.circle(screen, self.body_color, (self.coord[0], self.coord[1] + 10), wheel_radius)
-        pg.draw.circle(screen, self.body_color, (self.coord[0] + 15, self.coord[1] + 10), wheel_radius)
-
-         # Draw the turret
-        turret_width = 10
-        turret_height = 12
-        turret_center = (self.coord[0], self.coord[1] - height / 2 - turret_height / 2)
-        rotated_turret = pg.transform.rotate(pg.Surface((turret_width, turret_height)), -np.degrees(self.angle))
-        turret_rect = rotated_turret.get_rect(center=turret_center)
-        screen.blit(rotated_turret, turret_rect)
-
 
 class Target(GameObject):
     '''
@@ -240,29 +164,26 @@ class CircularMovingTarget(Target):
         y = self.coord[1] + self.rad * sin(angle_rad)
         self.coord = [x, y]
 
-class ScoreTable:
-    '''
-    Score table class.
-    '''
-    def __init__(self, t_destr=0, b_used=0):
-        self.t_destr = t_destr
-        self.b_used = b_used
-        self.font = pg.font.SysFont("dejavusansmono", 25)
-
-    def score(self):
-        '''
-        Score calculation method.
-        '''
-        return self.t_destr - self.b_used
-
-    def draw(self, screen):
-        score_surf = []
-        score_surf.append(self.font.render("Destroyed: {}".format(self.t_destr), True, WHITE))
-        score_surf.append(self.font.render("Balls used: {}".format(self.b_used), True, WHITE))
-        score_surf.append(self.font.render("Total: {}".format(self.score()), True, RED))
-        for i in range(3):
+class ScoreTable:	
+    '''	
+    Score table class.	
+    '''	
+    def __init__(self, t_destr=0, b_used=0):	
+        self.t_destr = t_destr	
+        self.b_used = b_used	
+        self.font = pg.font.SysFont("dejavusansmono", 25)	
+    def score(self):	
+        '''	
+        Score calculation method.	
+        '''	
+        return self.t_destr - self.b_used	
+    def draw(self, screen):	
+        score_surf = []	
+        score_surf.append(self.font.render("Destroyed: {}".format(self.t_destr), True, WHITE))	
+        score_surf.append(self.font.render("Balls used: {}".format(self.b_used), True, WHITE))	
+        score_surf.append(self.font.render("Total: {}".format(self.score()), True, RED))	
+        for i in range(3):	
             screen.blit(score_surf[i], [10, 10 + 30*i])
-
 
 class Manager:
     '''
@@ -331,10 +252,10 @@ class Manager:
             if event.type == pg.QUIT:
                 done = True
             elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_UP:
-                    self.gun.move(-5)
-                elif event.key == pg.K_DOWN:
-                    self.gun.move(5)
+                if event.key == pg.K_LEFT:
+                    self.gun.move(-40)
+                elif event.key == pg.K_RIGHT:
+                    self.gun.move(40)
             elif event.type == pg.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.gun.activate()
@@ -343,6 +264,7 @@ class Manager:
                     self.balls.append(self.gun.strike())
                     self.score_t.b_used += 1
         return done
+
 
     def draw(self, screen):
         '''
@@ -385,6 +307,124 @@ class Manager:
         for j in reversed(targets_c):
             self.score_t.t_destr += 1
             self.targets.pop(j)
+
+class Tank(GameObject):
+    '''
+    Tank class. Manages it's rendering, movement and striking.
+    '''
+    def __init__(self, coord=[30, SCREEN_SIZE[1]-25], angle=0, max_pow=100, min_pow=50, color=NAVYBLUE, p_type=0):
+        '''
+        Constructor method. Sets coordinate, direction, minimum and maximum power and color of the gun.
+        '''
+        self.coord = coord
+        self.angle = angle
+        self.max_pow = max_pow
+        self.min_pow = min_pow
+        self.color = color
+        self.active = False
+        self.pow = min_pow
+        self.p_type = p_type
+
+    def activate(self):
+        '''
+        Activates gun's charge.
+        '''
+        self.active = True
+
+    def gain(self, inc=2):
+        '''
+        Increases current gun charge power.
+        '''
+        if self.active and self.pow < self.max_pow:
+            self.pow += inc
+
+    def strike(self):
+        '''
+        Creates ball, according to gun's direction and current charge power.
+        '''
+        vel = self.pow
+        angle = self.angle
+        if self.p_type == 0:
+            ball = Shell(list(self.coord), [
+                        int(vel * np.cos(angle)), int(vel * np.sin(angle))], p_type=0)
+        elif self.p_type == 1:
+            ball = Shell(list(self.coord), [
+                        int(vel * np.cos(angle)), int(vel * np.sin(angle))], p_type=1)
+        else:
+            ball = Shell(list(self.coord), [
+                        int(vel * np.cos(angle)), int(vel * np.sin(angle))], p_type=2)
+        self.pow = self.min_pow
+        self.active = False
+        return ball
+    
+    def set_angle(self, target_pos):
+        '''
+        Sets gun's direction to target position.
+        '''
+        self.angle = np.arctan2(
+            target_pos[1] - self.coord[1], target_pos[0] - self.coord[0])
+        
+    def move(self, inc):
+        '''
+        Changes horizontal position of the gun.
+        '''
+        x = self.coord[0] + inc
+        if x > SCREEN_SIZE[0] - 30:
+            self.coord[0] = SCREEN_SIZE[0] - 30
+        elif x < 30:
+            self.coord[0] = 30
+        else:
+            self.coord[0] = x
+
+    def draw(self, screen):
+        '''
+        Draws the Tank on the screen.
+        '''
+        static_rect = pg.Rect(self.coord[0] - 60//2, self.coord[1], 60, 20)
+        pg.draw.rect(screen, self.color, static_rect)
+        pg.draw.circle(screen, self.color,
+                       (self.coord[0] - 20, self.coord[1] + 18), 7)
+        pg.draw.circle(screen, self.color,
+                       (self.coord[0], self.coord[1] + 18), 7)
+        pg.draw.circle(screen, self.color,
+                       (self.coord[0] + 20, self.coord[1] + 18), 7)
+        # Cannon
+        gun_shape = []
+        vec_1 = np.array([int(5*np.cos(self.angle - np.pi/2)),
+                         int(5*np.sin(self.angle - np.pi/2))])
+        vec_2 = np.array([int(self.pow*np.cos(self.angle)),
+                         int(self.pow*np.sin(self.angle))])
+        gun_pos = np.array(self.coord)
+        gun_shape.append((gun_pos + vec_1).tolist())
+        gun_shape.append((gun_pos + vec_1 + vec_2).tolist())
+        gun_shape.append((gun_pos + vec_2 - vec_1).tolist())
+        gun_shape.append((gun_pos - vec_1).tolist())
+        pg.draw.polygon(screen, self.color, gun_shape)
+
+# class BotTank(Tank):
+#     def __init__(self, coord=[400, SCREEN_SIZE[1] - 25], angle=0, max_pow=80, min_pow=10, color=WHITE):
+#         super().__init__(coord, angle, max_pow, min_pow, color=RED)
+#         self.direction = 1
+#         self.move_counter = 0
+#         self.move_threshold = 50
+#     def move_left(self):
+#         self.move(-15)
+#     def move_right(self):
+#         self.move(15)
+#     def update(self):
+#         self.move_counter += 1
+#         if self.move_counter >= self.move_threshold:
+#             self.move_counter = 0
+#             self.direction *= -1
+#             if self.direction == -1:
+#                 self.move_left()
+#             else:
+#                 self.move_right()
+#         if random.randint(0,100) < 5:
+#             target_angle = random.uniform(-np.pi/4, np.pi/4)
+#             self.set_angle([self.coord[0] + 100 * np.cos(target_angle), self.coord[1] + 100 * np.sin(target_angle)])
+#             self.activate()
+#             return self.strike()
 
 
 screen = pg.display.set_mode(SCREEN_SIZE)
