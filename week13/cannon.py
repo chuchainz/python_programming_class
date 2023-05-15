@@ -197,6 +197,7 @@ class Manager:
         self.n_targets = n_targets
         self.width = width
         self.height = height
+        #self.enemy = EnemyTank()
         self.new_mission()
 
     def new_mission(self):
@@ -223,6 +224,9 @@ class Manager:
             self.targets.append(CircularMovingTarget(coord=[randint(50, self.width-50), randint(50, self.height-50)],
                 rad=randint(max(1, 30 - 2*max(0, self.score_t.score())),
                 30 - max(0, self.score_t.score()))))
+        
+        for i in range(self.n_targets):
+            self.targets.append(BombTargets(rad=randint(max(1, 30 - 2*max(0, self.score_t.score())), 30 - max(0, self.score_t.score()))))
 
     def process(self, events, screen):
         '''
@@ -307,12 +311,63 @@ class Manager:
         for j in reversed(targets_c):
             self.score_t.t_destr += 1
             self.targets.pop(j)
+    
+    ###################
+    #enemy = tankAI.TankEnemy()
+    ###################
+
+class BombTargets(Target):
+    def __init__(self, coord=None, color=RED, rad=10):
+        super().__init__(coord, color, rad)
+        self.vx = randint(-2, +2)
+        self.vy = randint(-2, +2)
+        self.bombs = [] 
+        self.dropsBombs = True
+
+    def move(self):
+        self.coord[0] += self.vx
+        self.coord[1] = self.rad
+        self.check_corners()
+        if randint(1, 100) < 5:
+            self.dropbomb()
+        for bomb in self.bombs:
+            bomb.move(time=.5, grav=0)
+        
+    def check_corners(self):
+        '''
+        Reflects ball's velocity when ball bumps into the screen corners. Implemetns inelastic rebounce.
+        '''
+        for i in range(2):
+            if self.coord[i] < self.rad:
+                self.coord[i] = self.rad
+                if i == 0:
+                    self.vx = -int(self.vx)
+                else:
+                    self.vy = -int(self.vy)
+            elif self.coord[i] > SCREEN_SIZE[i] - self.rad:
+                self.coord[i] = SCREEN_SIZE[i] - self.rad
+                if i == 0:
+                    self.vx = -int(self.vx)
+                else:
+                    self.vy = -int(self.vy)
+    
+    def dropbomb(self):
+        # Create a new bomb object at the current position of the target
+        bomb = Shell(list(self.coord), [0, 5], rad=10, color=RED)  # Customize the bomb properties as needed
+        self.bombs.append(bomb)  # Add the bomb to the bombs list
+
+    def draw(self, screen):
+        super().draw(screen)  # Call the draw method of the parent class
+        
+        # Draw the bombs on the screen
+        for bomb in self.bombs:
+            bomb.draw(screen)
 
 class Tank(GameObject):
     '''
     Tank class. Manages it's rendering, movement and striking.
     '''
-    def __init__(self, coord=[30, SCREEN_SIZE[1]-25], angle=0, max_pow=100, min_pow=50, color=NAVYBLUE, p_type=0):
+    def __init__(self, coord=[30, SCREEN_SIZE[1]-25], angle=0, max_pow=100, min_pow=10, color=NAVYBLUE, p_type=0):
         '''
         Constructor method. Sets coordinate, direction, minimum and maximum power and color of the gun.
         '''
@@ -388,7 +443,7 @@ class Tank(GameObject):
                        (self.coord[0], self.coord[1] + 18), 7)
         pg.draw.circle(screen, self.color,
                        (self.coord[0] + 20, self.coord[1] + 18), 7)
-        # Cannon
+        
         gun_shape = []
         vec_1 = np.array([int(5*np.cos(self.angle - np.pi/2)),
                          int(5*np.sin(self.angle - np.pi/2))])
@@ -401,16 +456,20 @@ class Tank(GameObject):
         gun_shape.append((gun_pos - vec_1).tolist())
         pg.draw.polygon(screen, self.color, gun_shape)
 
-# class BotTank(Tank):
-#     def __init__(self, coord=[400, SCREEN_SIZE[1] - 25], angle=0, max_pow=80, min_pow=10, color=WHITE):
-#         super().__init__(coord, angle, max_pow, min_pow, color=RED)
+# class EnemyTank(Tank):
+#     def __init__(self, coord=[400, SCREEN_SIZE[1] - 25], angle=0, max_pow=80, min_pow=10, color=RED):
+#         super().__init__(coord, angle, max_pow, min_pow, color=color)
 #         self.direction = 1
 #         self.move_counter = 0
 #         self.move_threshold = 50
+#         self.target = None
+
 #     def move_left(self):
-#         self.move(-15)
+#         self.move(-40)
+
 #     def move_right(self):
-#         self.move(15)
+#         self.move(40)
+
 #     def update(self):
 #         self.move_counter += 1
 #         if self.move_counter >= self.move_threshold:
@@ -420,12 +479,14 @@ class Tank(GameObject):
 #                 self.move_left()
 #             else:
 #                 self.move_right()
-#         if random.randint(0,100) < 5:
-#             target_angle = random.uniform(-np.pi/4, np.pi/4)
-#             self.set_angle([self.coord[0] + 100 * np.cos(target_angle), self.coord[1] + 100 * np.sin(target_angle)])
+#         if self.target is not None:
+#             target_pos = self.target.get_position()
+#             self.set_angle(target_pos)
 #             self.activate()
 #             return self.strike()
 
+#     def set_target(self, target):
+#         self.target = target
 
 screen = pg.display.set_mode(SCREEN_SIZE)
 pg.display.set_caption("The gun of Khiryanov")
@@ -442,6 +503,5 @@ while not done:
     done = mgr.process(pg.event.get(), screen)
 
     pg.display.flip()
-
 
 pg.quit()
