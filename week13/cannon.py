@@ -197,7 +197,7 @@ class Manager:
         self.n_targets = n_targets
         self.width = width
         self.height = height
-        #self.enemy = EnemyTank()
+        self.ai_tank = AITank()
         self.new_mission()
 
     def new_mission(self):
@@ -242,6 +242,8 @@ class Manager:
         self.collide()
         self.draw(screen)
 
+        self.ai_tank.update(self.targets)
+
         if len(self.targets) == 0 and len(self.balls) == 0:
             self.new_mission()
 
@@ -280,6 +282,7 @@ class Manager:
             target.draw(screen)
         self.gun.draw(screen)
         self.score_t.draw(screen)
+        self.ai_tank.draw(screen)
 
     def move(self):
         '''
@@ -295,6 +298,11 @@ class Manager:
         for i, target in enumerate(self.targets):
             target.move()
         self.gun.gain()
+        
+        # Move the AITank randomly
+        directions = [-2, 2]  # Possible directions: -2 (left) and 2 (right)
+        move_direction = random.choice(directions)  # Randomly choose a direction
+        self.ai_tank.move(move_direction)
 
     def collide(self):
         '''
@@ -437,8 +445,6 @@ class Tank(GameObject):
         pg.draw.rect(screen, self.color, static_rect)
         pg.draw.circle(screen, self.color,
                        (self.coord[0] - 20, self.coord[1] + 18), 7)
-        # pg.draw.circle(screen, self.color,
-        #                (self.coord[0], self.coord[1] + 18), 7)
         pg.draw.circle(screen, self.color,
                        (self.coord[0] + 20, self.coord[1] + 18), 7)
         
@@ -453,6 +459,61 @@ class Tank(GameObject):
         gun_shape.append((gun_pos + vec_2 - vec_1).tolist())
         gun_shape.append((gun_pos - vec_1).tolist())
         pg.draw.polygon(screen, self.color, gun_shape)
+
+class AITank(Tank):
+    '''
+    AI-controlled tank that can shoot at targets and move on its own.
+    '''
+
+    def __init__(self, coord=[30, SCREEN_SIZE[1]-25], angle=0, max_pow=100, min_pow=10, color=NAVYBLUE, p_type=0):
+        super().__init__(coord, angle, max_pow, min_pow, color, p_type)
+        self.target = None
+
+    def update(self, targets):
+        '''
+        Updates the AI tank's actions based on the current targets.
+        '''
+        if self.target is None or self.target not in targets:
+            self.target = self._select_target(targets)
+
+        if self.target is not None:
+            self._aim_at_target()
+            self._move_towards_target()
+
+            # Randomly activate and gain power before striking
+            if random.randint(1, 100) < 30:
+                self.activate()
+            if self.active:
+                self.gain(random.randint(1, 3))
+                if self.pow >= self.max_pow:
+                    self.strike()
+
+    def _select_target(self, targets):
+        '''
+        Selects a target to aim and shoot at.
+        '''
+        if targets:
+            return random.choice(targets)
+        return None
+
+    def _aim_at_target(self):
+        '''
+        Sets the AI tank's direction towards the target.
+        '''
+        if self.target is not None:
+            self.set_angle(self.target.coord)
+
+    def _move_towards_target(self):
+        '''
+        Moves the AI tank towards the target.
+        '''
+        if self.target is not None:
+            target_x = self.target.coord[0]
+            tank_x = self.coord[0]
+            if target_x < tank_x:
+                self.move(-2)  # Move left
+            elif target_x > tank_x:
+                self.move(2)   # Move right
 
 screen = pg.display.set_mode(SCREEN_SIZE)
 pg.display.set_caption("The gun of Khiryanov")
