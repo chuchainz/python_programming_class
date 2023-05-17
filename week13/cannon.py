@@ -319,10 +319,6 @@ class Manager:
         for j in reversed(targets_c):
             self.score_t.t_destr += 1
             self.targets.pop(j)
-    
-
-    #enemy = tankAI.TankEnemy()
-
 
 class BombTargets(Target):
     def __init__(self, coord=None, color=RED, rad=10):
