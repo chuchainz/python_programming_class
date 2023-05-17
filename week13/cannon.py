@@ -320,9 +320,9 @@ class Manager:
             self.score_t.t_destr += 1
             self.targets.pop(j)
     
-    ###################
+
     #enemy = tankAI.TankEnemy()
-    ###################
+
 
 class BombTargets(Target):
     def __init__(self, coord=None, color=RED, rad=10):
@@ -516,9 +516,9 @@ class AITank(Tank):
             target_x = self.target.coord[0]
             tank_x = self.coord[0]
             if target_x < tank_x:
-                self.move(-2)  # Move left
+                self.move(-2)  #Move left
             elif target_x > tank_x:
-                self.move(2)   # Move right
+                self.move(2)   #Move right
 
 
 screen = pg.display.set_mode(SCREEN_SIZE)
