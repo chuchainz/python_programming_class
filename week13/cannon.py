@@ -456,8 +456,6 @@ class Tank(GameObject):
         gun_shape.append((gun_pos - vec_1).tolist())
         pg.draw.polygon(screen, self.color, gun_shape)
 
-import random
-
 class AITank(Tank):
     '''
     AI-controlled tank that can shoot at targets and move on its own.
@@ -499,10 +497,7 @@ class AITank(Tank):
         Sets the AI tank's direction towards the target.
         '''
         if self.target is not None:
-            # Randomly choose an angle within a range instead of aiming directly at the target
-            angle_range = 30  # Set the angle range within which the tank can shoot randomly
-            random_angle = self.target.angle + random.randint(-angle_range, angle_range)
-            self.set_angle(random_angle)
+            self.set_angle(self.target.coord)
 
     def _move_towards_target(self):
         '''
@@ -515,7 +510,6 @@ class AITank(Tank):
                 self.move(-2)  #Move left
             elif target_x > tank_x:
                 self.move(2)   #Move right
-
 
 screen = pg.display.set_mode(SCREEN_SIZE)
 pg.display.set_caption("The gun of Khiryanov")
