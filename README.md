@@ -18,3 +18,5 @@ To implement this, we can create separate modules for different components of th
 Furthermore, we can leverage OOP principles by defining classes that represent these components. By utilizing inheritance, we can establish a clear hierarchy of classes, where common attributes and behaviors can be inherited from a base class and specialized in derived classes. Encapsulation ensures that the internal state of each class is properly encapsulated and accessible only through well-defined interfaces. Polymorphism allows us to treat objects of different classes uniformly, simplifying code and promoting flexibility.
 
 By combining modular programming and OOP, we can create a more structured, maintainable, and extensible codebase for the Cannon Game. This approach fosters code organization, reusability, and promotes better software design practices.
+
+Team Members: Manager/Tester/developer: Jimmy Chu
