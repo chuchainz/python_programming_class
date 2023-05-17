@@ -437,8 +437,8 @@ class Tank(GameObject):
         pg.draw.rect(screen, self.color, static_rect)
         pg.draw.circle(screen, self.color,
                        (self.coord[0] - 20, self.coord[1] + 18), 7)
-        pg.draw.circle(screen, self.color,
-                       (self.coord[0], self.coord[1] + 18), 7)
+        # pg.draw.circle(screen, self.color,
+        #                (self.coord[0], self.coord[1] + 18), 7)
         pg.draw.circle(screen, self.color,
                        (self.coord[0] + 20, self.coord[1] + 18), 7)
         
@@ -464,7 +464,7 @@ mgr = Manager(n_targets=3)
 
 while not done:
     clock.tick(15)
-    screen.fill(BLACK)
+    screen.fill(COLORIO)
 
     done = mgr.process(pg.event.get(), screen)
 
