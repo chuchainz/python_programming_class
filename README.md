@@ -1,2 +1,4 @@
-# python_programming_class
-Python for programmers class
+# CS2520 Python for programmwers
+Assignemnt 7
+
+Tank Game
